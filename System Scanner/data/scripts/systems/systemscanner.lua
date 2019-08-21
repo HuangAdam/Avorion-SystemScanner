@@ -1,10 +1,10 @@
 -- System Scanner by MassCraxx 
--- v1
+-- v1.1
 package.path = package.path .. ";data/scripts/systems/?.lua"
 package.path = package.path .. ";data/scripts/lib/?.lua"
-require ("basesystem")
-require ("utility")
-require ("randomext")
+include ("basesystem")
+include ("utility")
+include ("randomext")
 
 -- optimization so that energy requirement doesn't have to be read every frame
 FixedEnergyRequirement = true
@@ -288,7 +288,7 @@ end
 
 function getEnergy(seed, rarity, permanent)
     local level, range = getBonuses(seed, rarity)
-	range = math.min(range, 750) * 0.0005 * level * 1000 * 1000 * 1000
+	range = math.min(range, 1000) * 0.0005 * level * 1000 * 1000 * 1000
 	
 	if range < 0 then
 		range = 0
@@ -299,9 +299,9 @@ end
 
 function getPrice(seed, rarity)
     local level, range = getBonuses(seed, rarity)
-    range = math.min(range, 2000)
+    range = math.min(range, 1000);
 
-    local price = range * rarity.value;
+    local price = range * 25 + (rarity.value + 1) * 7500;
 
     return price * 2.5 ^ rarity.value
 end
