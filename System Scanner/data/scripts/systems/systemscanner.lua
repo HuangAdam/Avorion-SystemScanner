@@ -1,5 +1,5 @@
 -- System Scanner by MassCraxx 
--- v1.1
+-- v1.2
 package.path = package.path .. ";data/scripts/systems/?.lua"
 package.path = package.path .. ";data/scripts/lib/?.lua"
 include ("basesystem")
@@ -193,7 +193,7 @@ function findSystems(entity)
     indicators = {}
 
     if entity and (scanAll or entity.type == EntityType.Wreckage) then
-        local plan = entity:getPlan()
+        local plan = entity:getFullPlanCopy()
         local blocks = {plan:getBlockIndices()}
 
         for i=1,#blocks do

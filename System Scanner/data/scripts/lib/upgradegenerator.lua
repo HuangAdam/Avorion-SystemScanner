@@ -1,1 +1,1 @@
-UpgradeGenerator.add("data/scripts/systems/systemscanner.lua",1)
+add("data/scripts/systems/systemscanner.lua",1)
