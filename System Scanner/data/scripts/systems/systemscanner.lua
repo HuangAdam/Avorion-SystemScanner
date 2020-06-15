@@ -1,5 +1,5 @@
 -- System Scanner by MassCraxx 
--- v1.2
+-- v1.3
 package.path = package.path .. ";data/scripts/systems/?.lua"
 package.path = package.path .. ";data/scripts/lib/?.lua"
 include ("basesystem")
@@ -8,6 +8,13 @@ include ("randomext")
 
 -- optimization so that energy requirement doesn't have to be read every frame
 FixedEnergyRequirement = true
+
+-- enables the scanner on any target
+local scanAll = false
+-- minimum block volume of systems
+local minVolume = 2
+-- maximum indicator rendered per system
+local maxTargets = 15
 
 local entityId
 local callbackRegistered = false
@@ -18,12 +25,6 @@ local currentTargetID
 
 local level
 local range = -1
-
-local scanAll = false
-local minVolume = 2
-
--- Enable if render performance too low
---local maxTargets = 50
 
 local function sortSystems(a, b)
     return a.volume > b.volume
@@ -166,22 +167,31 @@ function onPreRenderHud()
     end
 
     -- check render indicator highlights
+    local counter = {}
     if(inRange and level >= RarityType.Rare) then
         for i, entry in pairs(indicators) do
             if entry.parent ~= nil then
                 local block = entry.block
                 if block ~= nil then
-                    renderIndicator(entry.parent, entry.offset, block, entry.volume)
+                    -- init counter
+                    if not counter[block.blockIndex] then
+                        counter[block.blockIndex] = 0
+                    end
+
+                    -- render if maxTargets for system not reached
+                    if not maxTargets or counter[block.blockIndex] <= maxTargets then
+                        renderIndicator(entry.parent, entry.offset, block, entry.volume)
+                    end
+
+                    -- increase system indicator counter
+                    counter[block.blockIndex] = counter[block.blockIndex] + 1    
                 else
                     -- if block gone remove entry (will never happen since block is a copy not a reference)
                     table.remove(indicators,i)
+                    counter[block.blockIndex] = counter[block.blockIndex] - 1
                 end
             else
                 indicators = {}
-                return
-            end
-
-            if(maxTargets and i == maxTargets) then
                 return
             end
         end
@@ -198,15 +208,16 @@ function findSystems(entity)
 
         for i=1,#blocks do
             local block = plan:getBlock(blocks[i])
-            -- 52:Generator 50:Shield 55:Hyperspace Core
-            if block and (block.blockIndex == 52 
+            -- 5: Cargo 52:Generator 50:Shield 55:Hyperspace Core
+            if block and (block.blockIndex == 5
+            or (level >= RarityType.Rare and block.blockIndex == 52)
             or (level >= RarityType.Exceptional and block.blockIndex == 50) 
             or (level >= RarityType.Exotic and block.blockIndex == 55)) then
                 local box = block.box
                 if box then
                     -- Only add big blocks
                     local volume = box.size.x * box.size.y * box.size.z
-                    if(volume >= minVolume) then
+                    if volume >= minVolume then
                         -- Create entry
                         local center = block.box.center
 
@@ -232,13 +243,19 @@ function renderIndicator(parentEntity, offset, block, volume)
     offsetMatrix.position = parentPos.position + offsetRotVec
     offsetMatrix.translation = parentPos.translation + offsetRotVec
 
-    local color = ColorRGB(1,1,0)
+    local color = ColorRGB(1,1,1)
     if block.blockIndex == 50 then
         -- Shield gen blue
         color = ColorRGB(0,0,1)
+    elseif block.blockIndex == 52 then
+        -- Generator core yellow
+        color = ColorRGB(1,1,0)
     elseif block.blockIndex == 55 then
         -- Hyperspace core red
         color = ColorRGB(1,0,0)
+    elseif block.blockIndex == 5 then
+        -- Cargo green
+        color = ColorRGB(0,1,0)
     end
 
     local size = math.sqrt(volume) + 3
@@ -333,6 +350,10 @@ function getDescriptionLines(seed, rarity, permanent)
     local level, range = getBonuses(seed, rarity)
     
     table.insert(texts, {ltext = "Detects valuable systems in wrecks."%_t, rtext = "", icon = ""})
+
+    if level and level >= RarityType.Uncommon then
+        table.insert(texts, {ltext = "Highlights cargo bays in green."%_t, rtext = "", icon = ""})
+    end
 
     if level and level >= RarityType.Rare then
         table.insert(texts, {ltext = "Highlights generators in yellow."%_t, rtext = "", icon = ""})
