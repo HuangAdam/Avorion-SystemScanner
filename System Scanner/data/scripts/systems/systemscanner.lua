@@ -174,17 +174,17 @@ function onPreRenderHud()
                 local block = entry.block
                 if block ~= nil then
                     -- init counter
-                    if not counter[block.blockIndex] then
+                    if counter[block.blockIndex] == nil then
                         counter[block.blockIndex] = 0
                     end
 
                     -- render if maxTargets for system not reached
-                    if maxTargets == nil or counter[block.blockIndex] < maxTargets then
+                    if maxTargets == nil or (counter[block.blockIndex] < maxTargets) then
                         renderIndicator(entry.parent, entry.offset, block, entry.volume)
                     end
 
                     -- increase system indicator counter
-                    counter[block.blockIndex] = counter[block.blockIndex] + 1    
+                    counter[block.blockIndex] = counter[block.blockIndex] + 1
                 else
                     -- if block gone remove entry (will never happen since block is a copy not a reference)
                     table.remove(indicators,i)
