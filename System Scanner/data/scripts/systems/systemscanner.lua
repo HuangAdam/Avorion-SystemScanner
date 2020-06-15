@@ -179,7 +179,7 @@ function onPreRenderHud()
                     end
 
                     -- render if maxTargets for system not reached
-                    if not maxTargets or counter[block.blockIndex] <= maxTargets then
+                    if maxTargets == nil or counter[block.blockIndex] < maxTargets then
                         renderIndicator(entry.parent, entry.offset, block, entry.volume)
                     end
 
